@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Service - Поиск заказов</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Order Service</h1>
+            <p class="subtitle">Система управления заказами Wildberries</p>
+        </header>
+
+        <main class="main-content">
+            <!-- Форма поиска -->
+            <section class="search-section">
+                <div class="search-card">
+                    <h2>Поиск заказа</h2>
+                    <form id="searchForm" class="search-form">
+                        <div class="input-group">
+                            <label for="orderUID">ID заказа (order_uid)</label>
+                            <input type="text" id="orderUID"
+                                placeholder="Введите ID заказа, например: b563feb7b2b84b6test"
+                                value="b563feb7b2b84b6test" required>
+                        </div>
+                        <button type="submit" class="search-btn">
+                            <span class="btn-text">Найти заказ</span>
+                            <span class="loader" id="loader"></span>
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Результаты поиска -->
+            <section class="results-section" id="resultsSection" style="display: none;">
+                <div class="results-card">
+                    <h2>Информация о заказе</h2>
+                    <div id="orderDetails"></div>
+                </div>
+            </section>
+
+            <!-- Сообщения об ошибках -->
+            <section class="error-section" id="errorSection" style="display: none;">
+                <div class="error-card">
+                    <h2>Ошибка</h2>
+                    <p id="errorMessage"></p>
+                    <button class="retry-btn" onclick="clearError()">Попробовать снова</button>
+                </div>
+            </section>
+
+            <!-- Дополнительные действия -->
+            <section class="actions-section">
+                <div class="actions-card">
+                    <h3>Дополнительные действия</h3>
+                    <div class="action-buttons">
+                        <button class="action-btn" onclick="getRandomOrder()">
+                            Случайный заказ
+                        </button>
+                        <button class="action-btn" onclick="getCacheStats()">
+                            Статистика кеша
+                        </button>
+                        <button class="action-btn" onclick="getAllOrders()">
+                            Список заказов
+                        </button>
+                        <button class="action-btn" onclick="healthCheck()">
+                            Проверка сервиса
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2024 Wildberries Order Service. Микросервис обработки заказов.</p>
+        </footer>
+    </div>
+
+    <!-- Модальное окно для дополнительной информации -->
+    <div id="modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle"></h2>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
