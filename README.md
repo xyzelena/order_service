@@ -1,6 +1,36 @@
-# order_service
-A service with a simple interface that displays order data
+# Wildberries Go Order Service
 
-A demo service with a simple interface that displays order data.
+Микросервис для обработки заказов с использованием PostgreSQL, Kafka и кеширования в памяти.
 
-A small microservice has been created in Go using a database and a message queue. The service will receive order data from a queue (Kafka), save it to a database (PostgreSQL), and cache it in memory for quick access.
+## Структура проекта
+
+```
+order_service/
+├── backend/          # Backend приложение (Go, PostgreSQL, Kafka)
+├── frontend/         # Frontend приложение (веб-интерфейс)
+└── README.md         # Основная документация
+```
+
+## Быстрый старт
+
+### Backend
+```bash
+cd backend
+# См. backend/README.md для детальных инструкций
+```
+
+### Frontend  
+```bash
+cd frontend
+# См. frontend/README.md для детальных инструкций
+```
+
+## Архитектура
+
+Сервис состоит из:
+- **Backend**: Go-приложение с REST API, обработка Kafka сообщений, PostgreSQL
+- **Frontend**: Веб-интерфейс для отображения данных заказов
+- **База данных**: PostgreSQL для хранения заказов
+- **Очередь сообщений**: Kafka для получения данных заказов
+- **Кеширование**: In-memory кеш для быстрого доступа к данным
+
