@@ -57,14 +57,24 @@ docker-compose logs postgres
 
 ```
 backend/
-├── database/                   # Все файлы базы данных
-│   ├── docker-compose.yml      # Конфигурация PostgreSQL
-│   ├── init.sql               # SQL скрипт инициализации БД и пользователя
-│   ├── migrations/            # SQL миграции
-│   │   ├── 001_create_orders_tables.sql  # Создание основных таблиц
-│   │   └── 002_insert_test_data.sql      # Тестовые данные
-│   └── DATABASE_SCHEMA.md     # Документация схемы БД
-└── README.md                  # Документация backend
+├── app/                       # Go приложение Order Service
+│   ├── cmd/server/           # Точка входа
+│   ├── internal/             # Внутренние пакеты
+│   │   ├── models/          # Модели данных
+│   │   ├── database/        # PostgreSQL
+│   │   ├── cache/           # Кеш в памяти
+│   │   ├── kafka/           # Kafka consumer
+│   │   └── handlers/        # HTTP API
+│   ├── pkg/config/          # Конфигурация
+│   ├── Dockerfile           # Docker образ
+│   ├── Makefile            # Команды сборки
+│   └── README.md           # Документация приложения
+├── database/               # Все файлы базы данных
+│   ├── docker-compose.yml  # Конфигурация PostgreSQL
+│   ├── init.sql            # SQL скрипт инициализации БД
+│   ├── migrations/         # SQL миграции
+│   └── DATABASE_SCHEMA.md  # Документация схемы БД
+└── README.md              # Документация backend
 ```
 
 ## Схема базы данных
@@ -77,10 +87,38 @@ backend/
 
 Подробное описание схемы см. в [database/DATABASE_SCHEMA.md](database/DATABASE_SCHEMA.md)
 
+## Go приложение
+
+### Запуск Order Service:
+
+```bash
+# Переход в папку приложения
+cd app
+
+# Установка зависимостей
+make deps
+
+# Сборка и запуск
+make build
+make run
+
+# Или через Docker
+make docker-build
+make docker-run
+```
+
+### Доступные эндпоинты:
+- **HTTP API**: http://localhost:8080/api/v1/
+- **Веб-интерфейс**: http://localhost:8080/
+- **Health check**: http://localhost:8080/api/v1/health
+
+Подробная документация в [app/README.md](app/README.md)
+
 ## Примечания
 
 - База данных автоматически инициализируется при первом запуске с помощью скрипта `init.sql`
 - Пользователь `user` создается с полными правами на базу `order_service_db`
 - Таблицы создаются автоматически через миграции
 - Вставляется тестовый заказ для демонстрации работы
+- Go приложение автоматически восстанавливает кеш из БД при запуске
 - Убедитесь, что порт 5432 свободен перед запуском контейнера
