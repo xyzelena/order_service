@@ -17,14 +17,14 @@ Backend микросервиса для обработки заказов на G
 ```bash
 # Проверка статуса Docker
 docker --version
-
-# Если Docker не запущен, запустите Docker Desktop
-# или выполните: sudo systemctl start docker (на Linux)
 ```
 
 ### 2. Запуск PostgreSQL
 
 ```bash
+# Переход в папку database
+cd database
+
 # Запуск PostgreSQL контейнера
 docker-compose up -d postgres
 
@@ -43,7 +43,7 @@ docker-compose ps
 ### 4. Дополнительные команды
 
 ```bash
-# Остановка контейнера
+# Остановка контейнера (из папки database)
 docker-compose down
 
 # Подключение к БД через psql
@@ -57,28 +57,30 @@ docker-compose logs postgres
 
 ```
 backend/
-├── docker-compose.yml    # Конфигурация PostgreSQL
-├── init.sql             # SQL скрипт инициализации БД
-└── README.md            # Документация backend
+├── database/                   # Все файлы базы данных
+│   ├── docker-compose.yml      # Конфигурация PostgreSQL
+│   ├── init.sql               # SQL скрипт инициализации БД и пользователя
+│   ├── migrations/            # SQL миграции
+│   │   ├── 001_create_orders_tables.sql  # Создание основных таблиц
+│   │   └── 002_insert_test_data.sql      # Тестовые данные
+│   └── DATABASE_SCHEMA.md     # Документация схемы БД
+└── README.md                  # Документация backend
 ```
 
-## Решение проблем
+## Схема базы данных
 
-### Ошибка "Cannot connect to the Docker daemon"
-```bash
-# Проверьте, запущен ли Docker
-docker --version
+Создается 4 основные таблицы:
+- **orders** - основная информация о заказах
+- **deliveries** - данные о доставке  
+- **payments** - платежная информация
+- **order_items** - товары в заказе
 
-# Запустите Docker Desktop (macOS/Windows) или Docker daemon (Linux)
-# macOS/Windows: откройте Docker Desktop
-# Linux: sudo systemctl start docker
-```
-
-### Warning о версии docker-compose
-Предупреждение `version is obsolete` - не критично, но для чистоты убрана строка `version` из docker-compose.yml
+Подробное описание схемы см. в [database/DATABASE_SCHEMA.md](database/DATABASE_SCHEMA.md)
 
 ## Примечания
 
 - База данных автоматически инициализируется при первом запуске с помощью скрипта `init.sql`
 - Пользователь `user` создается с полными правами на базу `order_service_db`
+- Таблицы создаются автоматически через миграции
+- Вставляется тестовый заказ для демонстрации работы
 - Убедитесь, что порт 5432 свободен перед запуском контейнера
