@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Service - Поиск заказов</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="./styles/main.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
@@ -13,11 +13,10 @@
     <div class="container">
         <header class="header">
             <h1>Order Service</h1>
-            <p class="subtitle">Система управления заказами Wildberries</p>
+            <p class="subtitle">Сервис поиска заказов</p>
         </header>
 
         <main class="main-content">
-            <!-- Форма поиска -->
             <section class="search-section">
                 <div class="search-card">
                     <h2>Поиск заказа</h2>
@@ -36,7 +35,6 @@
                 </div>
             </section>
 
-            <!-- Результаты поиска -->
             <section class="results-section" id="resultsSection" style="display: none;">
                 <div class="results-card">
                     <h2>Информация о заказе</h2>
@@ -44,7 +42,6 @@
                 </div>
             </section>
 
-            <!-- Сообщения об ошибках -->
             <section class="error-section" id="errorSection" style="display: none;">
                 <div class="error-card">
                     <h2>Ошибка</h2>
@@ -53,7 +50,6 @@
                 </div>
             </section>
 
-            <!-- Дополнительные действия -->
             <section class="actions-section">
                 <div class="actions-card">
                     <h3>Дополнительные действия</h3>
@@ -76,11 +72,13 @@
         </main>
 
         <footer class="footer">
-            <p>&copy; 2024 Wildberries Order Service. Микросервис обработки заказов.</p>
+            <p>Order Service
+                <br>
+                <a href="https://github.com/xyzelena/order_service" target="_blank" rel="noopener noreferrer">GitHub</a>
+            </p>
         </footer>
     </div>
 
-    <!-- Модальное окно для дополнительной информации -->
     <div id="modal" class="modal" style="display: none;">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
@@ -89,7 +87,7 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="./scripts/main.js"></script>
 </body>
 
 </html>

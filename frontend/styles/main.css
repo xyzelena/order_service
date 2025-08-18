@@ -369,6 +369,13 @@ body {
     opacity: 0.8;
 }
 
+.footer a {
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.2rem;
+}
+
 .status-badge {
     display: inline-block;
     padding: 4px 12px;
