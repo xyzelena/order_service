@@ -1,7 +1,7 @@
 # Makefile для Order Service
 # Автоматизация запуска и тестирования всей системы
 
-.PHONY: help setup start stop test test-api test-cache test-kafka clean status
+.PHONY: help setup start stop test test-api test-cache test-kafka clean status check-frontend
 
 # Цвета для вывода
 GREEN=\033[0;32m
@@ -37,7 +37,7 @@ start: ## Запустить всю систему (инфраструктура
 	@echo "  • API: http://localhost:8081/api/v1"
 	@echo "  • Health: http://localhost:8081/api/v1/health"
 	@echo "  • Kafka UI: http://localhost:8080"
-	@echo "  • Frontend: make start-frontend"
+	@echo "  • Frontend: make start-frontend (модульная ES6 архитектура)"
 
 start-app: ## Запустить только Go приложение (инфраструктура должна быть запущена)
 	@echo "$(BLUE) Запуск Go приложения...$(NC)"
@@ -49,6 +49,7 @@ start-producer: ## Запустить Kafka producer для эмуляции с�
 
 start-frontend: ## Запустить frontend на порту 3000
 	@echo "$(BLUE) Запуск frontend...$(NC)"
+	@echo "$(YELLOW)Внимание: Frontend использует ES6 модули - требуется HTTP сервер!$(NC)"
 	@echo "$(YELLOW)Доступные варианты:$(NC)"
 	@echo "  1. Go сервер:     cd backend/app && make run-frontend"
 	@echo "  2. Python сервер: cd frontend && python -m http.server 3000"
@@ -105,6 +106,7 @@ test-full: ## Полный интеграционный тест всей сис
 	@$(MAKE) status
 	@$(MAKE) test-api
 	@$(MAKE) test-cache
+	@$(MAKE) check-frontend
 	@echo "$(GREEN) Интеграционное тестирование завершено$(NC)"
 
 clean: ## Очистить систему (остановить контейнеры, удалить volumes)
@@ -129,7 +131,23 @@ quick-test: ## Быстрая проверка основных функций
 	@curl -s http://localhost:8081/api/v1/orders/b563feb7b2b84b6test >/dev/null && echo "$(GREEN) Заказы загружаются$(NC)" || echo "$(RED) Ошибка загрузки заказов$(NC)"
 	@echo "$(YELLOW)3. Проверка кеша...$(NC)"
 	@curl -s http://localhost:8081/api/v1/cache/stats >/dev/null && echo "$(GREEN) Кеш работает$(NC)" || echo "$(RED) Кеш недоступен$(NC)"
+	@echo "$(YELLOW)4. Проверка случайного заказа...$(NC)"
+	@curl -s -X POST http://localhost:8081/api/v1/orders/random >/dev/null && echo "$(GREEN) Генерация заказов работает$(NC)" || echo "$(RED) Ошибка генерации заказов$(NC)"
 	@echo "$(GREEN) Быстрая проверка завершена$(NC)"
+
+check-frontend: ## Проверить структуру frontend модулей
+	@echo "$(BLUE) Проверка модульной структуры frontend...$(NC)"
+	@echo "$(YELLOW) Проверка наличия модулей:$(NC)"
+	@[ -f frontend/scripts/main.js ] && echo "$(GREEN) ✓ main.js$(NC)" || echo "$(RED) ✗ main.js отсутствует$(NC)"
+	@[ -f frontend/scripts/api.js ] && echo "$(GREEN) ✓ api.js$(NC)" || echo "$(RED) ✗ api.js отсутствует$(NC)"
+	@[ -f frontend/scripts/orderRenderer.js ] && echo "$(GREEN) ✓ orderRenderer.js$(NC)" || echo "$(RED) ✗ orderRenderer.js отсутствует$(NC)"
+	@[ -f frontend/scripts/modal.js ] && echo "$(GREEN) ✓ modal.js$(NC)" || echo "$(RED) ✗ modal.js отсутствует$(NC)"
+	@[ -f frontend/scripts/notifications.js ] && echo "$(GREEN) ✓ notifications.js$(NC)" || echo "$(RED) ✗ notifications.js отсутствует$(NC)"
+	@[ -f frontend/scripts/utils.js ] && echo "$(GREEN) ✓ utils.js$(NC)" || echo "$(RED) ✗ utils.js отсутствует$(NC)"
+	@echo "$(YELLOW) Проверка ES6 синтаксиса:$(NC)"
+	@grep -l "export" frontend/scripts/*.js | wc -l | xargs -I {} echo "$(GREEN) {} модулей с экспортами$(NC)"
+	@grep -l "import" frontend/scripts/*.js | wc -l | xargs -I {} echo "$(GREEN) {} модулей с импортами$(NC)"
+	@echo "$(GREEN) Проверка модульной структуры завершена$(NC)"
 
 # Разработка
 dev: ## Запустить в режиме разработки с автоперезагрузкой
