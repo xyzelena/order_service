@@ -295,6 +295,48 @@ body {
     box-shadow: var(--shadow);
 }
 
+.action-btn:disabled,
+.retry-btn:disabled {
+    background: #9ca3af;
+    color: white;
+    border-color: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.action-btn.loading {
+    background: var(--primary-color);
+    color: white;
+    position: relative;
+    pointer-events: none;
+}
+
+.action-btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    margin: auto;
+    border: 2px solid transparent;
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+@keyframes spin {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
 .error-card {
     border-left: 4px solid var(--error-color);
     background: #fef2f2;

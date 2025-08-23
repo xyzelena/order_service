@@ -2,9 +2,12 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
+	"math/rand"
 	"net/http"
 	"order-service/internal/cache"
 	"order-service/internal/database"
+	"order-service/internal/models"
 	"strconv"
 	"strings"
 	"time"
@@ -38,10 +41,29 @@ func NewHTTPHandler(db database.OrderRepository, cache cache.OrderCache, logger 
 func (h *HTTPHandler) SetupRoutes() *mux.Router {
 	r := mux.NewRouter()
 
+	// CORS middleware
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Разрешаем запросы с frontend
+			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			
+			// Обрабатываем preflight OPTIONS запросы
+			if r.Method == "OPTIONS" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+			
+			next.ServeHTTP(w, r)
+		})
+	})
+
 	// API маршруты
 	api := r.PathPrefix("/api/v1").Subrouter()
 	api.HandleFunc("/orders/{order_uid}", h.GetOrder).Methods("GET")
 	api.HandleFunc("/orders", h.GetAllOrders).Methods("GET")
+	api.HandleFunc("/orders/random", h.GenerateRandomOrder).Methods("POST", "OPTIONS")
 	api.HandleFunc("/cache/stats", h.GetCacheStats).Methods("GET")
 	api.HandleFunc("/health", h.HealthCheck).Methods("GET")
 
@@ -292,4 +314,114 @@ type responseWrapper struct {
 func (rw *responseWrapper) WriteHeader(code int) {
 	rw.statusCode = code
 	rw.ResponseWriter.WriteHeader(code)
+}
+
+// GenerateRandomOrder генерирует случайный заказ
+func (h *HTTPHandler) GenerateRandomOrder(w http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Generating random order")
+
+	// Данные для генерации
+	names := []string{"Алексей Иванов", "Мария Петрова", "Дмитрий Сидоров", "Елена Козлова", "Игорь Волков"}
+	cities := []string{"Москва", "Санкт-Петербург", "Новосибирск", "Екатеринбург", "Казань"}
+	brands := []string{"Nike", "Adidas", "Puma", "Reebok", "New Balance"}
+	products := []string{"Кроссовки", "Футболка", "Шорты", "Куртка", "Джинсы"}
+
+	// Генерируем случайный заказ
+	order := generateRandomOrderData(names, cities, brands, products)
+
+	// Сохраняем в базу данных
+	if err := h.db.CreateOrder(order); err != nil {
+		h.logger.WithError(err).Error("Failed to create random order")
+		h.writeErrorResponse(w, http.StatusInternalServerError, "Ошибка создания заказа")
+		return
+	}
+
+	// Добавляем в кеш
+	h.cache.Set(order.OrderUID, order)
+
+	h.logger.WithField("order_uid", order.OrderUID).Info("Random order created successfully")
+
+	// Возвращаем созданный заказ
+	h.writeSuccessResponse(w, order)
+}
+
+func generateRandomOrderData(names, cities, brands, products []string) *models.OrderFull {
+	rand.Seed(time.Now().UnixNano())
+
+	orderUID := fmt.Sprintf("random_%d_%d", time.Now().Unix(), rand.Intn(10000))
+	trackNumber := fmt.Sprintf("WBILTEST%d", rand.Intn(100000))
+
+	order := &models.OrderFull{
+		Order: models.Order{
+			OrderUID:          orderUID,
+			TrackNumber:       trackNumber,
+			Entry:             "WBIL",
+			Locale:            "ru",
+			InternalSignature: "",
+			CustomerID:        fmt.Sprintf("customer_%d", rand.Intn(1000)),
+			DeliveryService:   "test_delivery",
+			Shardkey:          fmt.Sprintf("%d", rand.Intn(10)),
+			SmID:              rand.Intn(100),
+			DateCreated:       time.Now(),
+			OofShard:          "1",
+			CreatedAt:         time.Now(),
+			UpdatedAt:         time.Now(),
+		},
+	}
+
+	// Генерируем доставку
+	order.Delivery = &models.Delivery{
+		OrderUID: orderUID,
+		Name:     names[rand.Intn(len(names))],
+		Phone:    fmt.Sprintf("+7%d", 9000000000+rand.Intn(99999999)),
+		Zip:      fmt.Sprintf("%d", 100000+rand.Intn(900000)),
+		City:     cities[rand.Intn(len(cities))],
+		Address:  fmt.Sprintf("ул. Тестовая, д. %d", rand.Intn(100)+1),
+		Region:   "Тестовый регион",
+		Email:    fmt.Sprintf("test%d@example.com", rand.Intn(1000)),
+	}
+
+	// Генерируем платеж
+	goodsTotal := rand.Intn(5000) + 100
+	deliveryCost := rand.Intn(500) + 100
+	order.Payment = &models.Payment{
+		OrderUID:     orderUID,
+		Transaction:  orderUID,
+		RequestID:    "",
+		Currency:     "RUB",
+		Provider:     "test_pay",
+		Amount:       goodsTotal + deliveryCost,
+		PaymentDt:    time.Now().Unix(),
+		Bank:         "test_bank",
+		DeliveryCost: deliveryCost,
+		GoodsTotal:   goodsTotal,
+		CustomFee:    0,
+	}
+
+	// Генерируем товары
+	numItems := rand.Intn(3) + 1
+	order.Items = make([]models.OrderItem, numItems)
+	
+	for i := 0; i < numItems; i++ {
+		price := rand.Intn(2000) + 100
+		sale := rand.Intn(50)
+		totalPrice := price - (price * sale / 100)
+		
+		order.Items[i] = models.OrderItem{
+			OrderUID:    orderUID,
+			ChrtID:      int64(rand.Intn(10000000) + 1000000),
+			TrackNumber: trackNumber,
+			Price:       price,
+			Rid:         fmt.Sprintf("rid_%d_%d", time.Now().Unix(), rand.Intn(1000)),
+			Name:        products[rand.Intn(len(products))],
+			Sale:        sale,
+			Size:        fmt.Sprintf("%d", rand.Intn(50)+35),
+			TotalPrice:  totalPrice,
+			NmID:        int64(rand.Intn(10000000) + 1000000),
+			Brand:       brands[rand.Intn(len(brands))],
+			Status:      200 + rand.Intn(10),
+		}
+	}
+
+	return order
 }

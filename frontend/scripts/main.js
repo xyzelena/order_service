@@ -27,7 +27,11 @@ document.addEventListener('DOMContentLoaded', function () {
     // Автофокус на поле ввода
     orderUIDInput.focus();
 
-    console.log('Order Service Frontend initialized');
+    // Обработчик для кнопки случайного заказа
+    const randomOrderBtn = document.getElementById('randomOrderBtn');
+    if (randomOrderBtn) {
+        randomOrderBtn.addEventListener('click', generateRandomOrder);
+    }
 });
 
 // Обработчик поиска заказа
@@ -438,4 +442,110 @@ window.onclick = function (event) {
     if (event.target === modal) {
         closeModal();
     }
+}
+
+// Генерация случайного заказа
+async function generateRandomOrder(event) {
+    const randomBtn = event ? event.target : document.getElementById('randomOrderBtn');
+
+    if (!randomBtn) {
+        return;
+    }
+
+    const originalText = randomBtn.textContent;
+
+    try {
+        // Блокируем кнопку и меняем текст
+        randomBtn.disabled = true;
+        randomBtn.style.backgroundColor = '#9ca3af';
+        randomBtn.style.cursor = 'not-allowed';
+        randomBtn.textContent = 'Создается...';
+
+        hideError();
+
+        const response = await fetch(`${API_BASE_URL}/orders/random`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+
+        if (result.success && result.data) {
+            // Автоматически отображаем созданный заказ
+            orderUIDInput.value = result.data.order_uid;
+            displayOrder(result.data);
+            showMessage(`Заказ создан: ${result.data.order_uid}`, 'success');
+        } else {
+            showError(result.error || 'Ошибка создания заказа');
+        }
+    } catch (error) {
+        showMessage(`Ошибка: ${error.message}`, 'error');
+    } finally {
+        // Разблокируем кнопку
+        randomBtn.disabled = false;
+        randomBtn.style.backgroundColor = '';
+        randomBtn.style.cursor = '';
+        randomBtn.textContent = originalText;
+    }
+}
+
+// Показ уведомлений
+function showMessage(message, type = 'info') {
+    // Создаем элемент уведомления
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+
+    // Добавляем стили
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        z-index: 1000;
+        opacity: 0;
+        transform: translateX(100%);
+        transition: all 0.3s ease;
+    `;
+
+    // Устанавливаем цвет в зависимости от типа
+    switch (type) {
+        case 'success':
+            notification.style.backgroundColor = '#10b981';
+            break;
+        case 'error':
+            notification.style.backgroundColor = '#ef4444';
+            break;
+        default:
+            notification.style.backgroundColor = '#3b82f6';
+    }
+
+    // Добавляем в DOM
+    document.body.appendChild(notification);
+
+    // Анимация появления
+    setTimeout(() => {
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+
+    // Автоматическое удаление через 3 секунды
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }, 3000);
 }

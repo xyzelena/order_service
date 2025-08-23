@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func main() {
@@ -29,8 +30,16 @@ func main() {
 	// Создаем файловый сервер
 	fileServer := http.FileServer(http.Dir(absPath))
 	
-	// Настраиваем маршруты
-	http.Handle("/", fileServer)
+	// Настраиваем маршруты с отключением кеша для разработки
+	http.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Отключаем кеширование для .js и .css файлов
+		if strings.HasSuffix(r.URL.Path, ".js") || strings.HasSuffix(r.URL.Path, ".css") {
+			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+			w.Header().Set("Pragma", "no-cache")
+			w.Header().Set("Expires", "0")
+		}
+		fileServer.ServeHTTP(w, r)
+	}))
 	
 	port := "3000"
 	if envPort := os.Getenv("FRONTEND_PORT"); envPort != "" {
