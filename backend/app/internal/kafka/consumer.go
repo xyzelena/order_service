@@ -37,10 +37,14 @@ func NewConsumer(cfg *config.KafkaConfig, db database.OrderRepository, cache cac
 		GroupID:     cfg.GroupID,
 		MinBytes:    1,        // 1 байт минимум
 		MaxBytes:    10e6,     // 10MB максимум
-		MaxWait:     100 * time.Millisecond,
-		StartOffset: kafka.LastOffset, // Начинаем с последнего сообщения
+		MaxWait:     1 * time.Second, // Увеличиваем таймаут ожидания
+		StartOffset: kafka.FirstOffset, // Начинаем с первого сообщения
 		ErrorLogger: kafka.LoggerFunc(func(msg string, args ...interface{}) {
-			logger.Errorf("Kafka error: "+msg, args...)
+			// Логируем только критические ошибки, игнорируем таймауты
+			if !strings.Contains(fmt.Sprintf(msg, args...), "timeout") &&
+			   !strings.Contains(fmt.Sprintf(msg, args...), "deadline exceeded") {
+				logger.Errorf("Kafka error: "+msg, args...)
+			}
 		}),
 	})
 
@@ -68,9 +72,12 @@ func (c *Consumer) Start(ctx context.Context) error {
 				return
 			default:
 				if err := c.processMessage(ctx); err != nil {
-					c.logger.WithError(err).Error("Failed to process Kafka message")
-					// Небольшая задержка перед следующей попыткой
-					time.Sleep(time.Second)
+					// Логируем только если это не таймаут
+					if !strings.Contains(err.Error(), "deadline exceeded") &&
+					   !strings.Contains(err.Error(), "timeout") {
+						c.logger.WithError(err).Error("Failed to process Kafka message")
+					}
+					// Пауза уже добавлена в processMessage
 				}
 			}
 		}
@@ -93,15 +100,19 @@ func (c *Consumer) Stop() error {
 // processMessage обрабатывает одно сообщение из Kafka
 func (c *Consumer) processMessage(ctx context.Context) error {
 	// Устанавливаем таймаут для чтения сообщения
-	readCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	readCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
 	msg, err := c.reader.ReadMessage(readCtx)
 	if err != nil {
 		if err == context.DeadlineExceeded {
 			// Таймаут - это нормально, просто нет сообщений
+			// Добавляем паузу чтобы не спамить
+			time.Sleep(2 * time.Second)
 			return nil
 		}
+		// Для других ошибок тоже добавляем паузу
+		time.Sleep(1 * time.Second)
 		return fmt.Errorf("failed to read message: %w", err)
 	}
 

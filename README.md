@@ -90,7 +90,7 @@ make test-full    # Полный интеграционный тест
 ```
 
 ### Ожидаемые результаты:
-1. **API отвечает** на `GET http://localhost:8081/order/<order_uid>`
+1. **API отвечает** на `GET http://localhost:8081/api/v1/orders/<order_uid>`
 2. **JSON корректный** с полями success, data, error
 3. **Кеш ускоряет** повторные запросы минимум в 5 раз
 4. **Kafka обрабатывает** сообщения онлайн

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -68,8 +69,11 @@ type KafkaOrderItem struct {
 func main() {
 	// Настройка Kafka writer
 	writer := kafka.NewWriter(kafka.WriterConfig{
-		Brokers: []string{"localhost:9092"},
-		Topic:   "orders",
+		Brokers:      []string{"localhost:9092"},
+		Topic:        "orders",
+		Balancer:     &kafka.LeastBytes{},
+		RequiredAcks: 1, // kafka.RequireOne equivalent
+		Async:        false,
 	})
 	defer writer.Close()
 
@@ -243,5 +247,5 @@ func sendOrder(writer *kafka.Writer, order KafkaOrderMessage) error {
 		Value: data,
 	}
 
-	return writer.WriteMessages(nil, message)
+	return writer.WriteMessages(context.Background(), message)
 }
