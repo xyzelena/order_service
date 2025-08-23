@@ -1,6 +1,7 @@
 :root {
     --primary-color: #6366f1;
     --primary-hover: #5b5bd6;
+    --primary-text-color: #fff;
     --secondary-color: #f8fafc;
     --accent-color: #059669;
     --error-color: #dc2626;
@@ -38,7 +39,7 @@ body {
 .header {
     text-align: center;
     margin-bottom: 40px;
-    color: white;
+    color: var(--primary-text-color);
 }
 
 .header h1 {
@@ -65,7 +66,7 @@ body {
 .results-card,
 .error-card,
 .actions-card {
-    background: white;
+    background: var(--primary-text-color);
     border-radius: 16px;
     padding: 32px;
     box-shadow: var(--shadow-lg);
@@ -112,14 +113,14 @@ body {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-    background: white;
+    background: var(--primary-text-color);
 }
 
 .search-btn {
     width: 100%;
     padding: 16px 32px;
     background: var(--primary-color);
-    color: white;
+    color: var(--primary-text-color);
     border: none;
     border-radius: 12px;
     font-size: 1rem;
@@ -150,7 +151,7 @@ body {
     width: 20px;
     height: 20px;
     border: 2px solid transparent;
-    border-top: 2px solid white;
+    border-top: 2px solid var(--primary-text-color);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -230,7 +231,7 @@ body {
 }
 
 .item-card {
-    background: white;
+    background: var(--primary-text-color);
     border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 16px;
@@ -278,7 +279,7 @@ body {
 .action-btn,
 .retry-btn {
     padding: 12px 24px;
-    background: white;
+    background: var(--primary-text-color);
     color: var(--primary-color);
     border: 2px solid var(--primary-color);
     border-radius: 8px;
@@ -290,7 +291,7 @@ body {
 .action-btn:hover,
 .retry-btn:hover {
     background: var(--primary-color);
-    color: white;
+    color: var(--primary-text-color);
     transform: translateY(-1px);
     box-shadow: var(--shadow);
 }
@@ -298,7 +299,7 @@ body {
 .action-btn:disabled,
 .retry-btn:disabled {
     background: #9ca3af;
-    color: white;
+    color: var(--primary-text-color);
     border-color: #9ca3af;
     cursor: not-allowed;
     transform: none;
@@ -307,7 +308,7 @@ body {
 
 .action-btn.loading {
     background: var(--primary-color);
-    color: white;
+    color: var(--primary-text-color);
     position: relative;
     pointer-events: none;
 }
@@ -319,7 +320,7 @@ body {
     height: 16px;
     margin: auto;
     border: 2px solid transparent;
-    border-top-color: #ffffff;
+    border-top-color: var(--primary-text-color);
     border-radius: 50%;
     animation: spin 1s linear infinite;
     top: 50%;
@@ -359,7 +360,7 @@ body {
 
 .retry-btn:hover {
     background: var(--error-color);
-    color: white;
+    color: var(--primary-text-color);
 }
 
 .modal {
@@ -377,7 +378,7 @@ body {
 }
 
 .modal-content {
-    background: white;
+    background: var(--primary-text-color);
     border-radius: 16px;
     padding: 32px;
     max-width: 800px;
@@ -407,12 +408,12 @@ body {
     text-align: center;
     margin-top: 40px;
     padding: 20px;
-    color: white;
+    color: var(--primary-text-color);
     opacity: 0.8;
 }
 
 .footer a {
-    color: white;
+    color: var(--primary-text-color);
     text-decoration: none;
     font-weight: 600;
     font-size: 1.2rem;
