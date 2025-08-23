@@ -32,7 +32,12 @@ run: build ## Запустить приложение
 
 run-frontend: ## Запустить frontend сервер на Go
 	@echo "$(GREEN)Запуск frontend сервера...$(NC)"
-	go run ./cmd/frontend-server ../../frontend
+	@if [ -d "../../frontend" ]; then \
+		go run ./cmd/frontend-server ../../frontend; \
+	else \
+		echo "$(RED)Папка frontend не найдена в ../../frontend$(NC)"; \
+		echo "$(YELLOW)Проверьте структуру проекта$(NC)"; \
+	fi
 
 test: ## Запустить тесты
 	@echo "$(GREEN)Запуск тестов...$(NC)"
@@ -69,7 +74,13 @@ dev-setup: ## Настройка среды разработки
 		echo "$(RED)Файл env.example не найден!$(NC)"; \
 		exit 1; \
 	fi
-	@echo "$(YELLOW)Скопируйте env.example в .env и настройте переменные$(NC)"
+	@if [ ! -f .env ]; then \
+		cp env.example .env; \
+		echo "$(GREEN)Файл .env создан из env.example$(NC)"; \
+		echo "$(YELLOW)Настройте переменные в .env при необходимости$(NC)"; \
+	else \
+		echo "$(YELLOW)Файл .env уже существует$(NC)"; \
+	fi
 
 # По умолчанию показываем справку
 .DEFAULT_GOAL := help

@@ -45,6 +45,7 @@ make deps && make build && make run
 # Go сервер (рекомендуется):
 cd ../app && make run-frontend
 # Или Python: cd ../../frontend && python -m http.server 3000
+# Или из корня: make start-frontend
 ```
 
 ## Архитектура
@@ -81,9 +82,11 @@ make quick-test  # Проверка основных функций
 
 ### Полное тестирование
 ```bash
+make test         # Запустить все тесты (API + кеш)
 make test-api     # HTTP API и JSON формат
 make test-cache   # Производительность кеша  
 make test-kafka   # Kafka интеграция
+make test-full    # Полный интеграционный тест
 ```
 
 ### Ожидаемые результаты:

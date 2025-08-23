@@ -14,10 +14,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 )
 
 func main() {
+	// Загружаем .env файл (игнорируем ошибку если файл не найден)
+	_ = godotenv.Load()
+
 	// Настройка логгера
 	logger := logrus.New()
 	logger.SetFormatter(&logrus.JSONFormatter{})
@@ -59,15 +63,19 @@ func main() {
 	httpHandler := handlers.NewHTTPHandler(db, orderCache, logger)
 	router := httpHandler.SetupRoutes()
 
-	// Создаем и запускаем Kafka consumer
-	consumer := kafka.NewConsumer(&cfg.Kafka, db, orderCache, logger)
+	// Создаем и запускаем Kafka consumer (если не отключен)
+	var consumer *kafka.Consumer
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	if err := consumer.Start(ctx); err != nil {
-		logger.WithError(err).Fatal("Failed to start Kafka consumer")
+	if os.Getenv("DISABLE_KAFKA") != "true" {
+		consumer = kafka.NewConsumer(&cfg.Kafka, db, orderCache, logger)
+		if err := consumer.Start(ctx); err != nil {
+			logger.WithError(err).Error("Failed to start Kafka consumer - continuing without Kafka")
+		}
+	} else {
+		logger.Info("Kafka consumer disabled by DISABLE_KAFKA=true")
 	}
-	defer consumer.Stop()
 
 	// Настраиваем HTTP сервер
 	server := &http.Server{
@@ -94,8 +102,10 @@ func main() {
 	logger.Info("Shutdown signal received, starting graceful shutdown")
 
 	// Останавливаем Kafka consumer
-	if err := consumer.Stop(); err != nil {
-		logger.WithError(err).Error("Failed to stop Kafka consumer")
+	if consumer != nil {
+		if err := consumer.Stop(); err != nil {
+			logger.WithError(err).Error("Failed to stop Kafka consumer")
+		}
 	}
 
 	// Останавливаем HTTP сервер с таймаутом

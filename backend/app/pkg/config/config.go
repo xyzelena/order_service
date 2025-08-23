@@ -48,8 +48,8 @@ func LoadConfig() *Config {
 		Database: DatabaseConfig{
 			Host:     getEnv("DB_HOST", "localhost"),
 			Port:     getEnvAsInt("DB_PORT", 5432),
-			User:     getEnv("DB_USER", "user"),
-			Password: getEnv("DB_PASSWORD", "0000"),
+			User:     getEnv("DB_USER", "postgres"),
+			Password: getEnv("DB_PASSWORD", "postgres"),
 			DBName:   getEnv("DB_NAME", "order_service_db"),
 			SSLMode:  getEnv("DB_SSLMODE", "disable"),
 		},

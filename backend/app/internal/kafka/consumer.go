@@ -21,6 +21,7 @@ type Consumer struct {
 	cache    cache.OrderCache
 	logger   *logrus.Logger
 	stopChan chan struct{}
+	stopped  bool
 }
 
 type MessageProcessor interface {
@@ -80,7 +81,11 @@ func (c *Consumer) Start(ctx context.Context) error {
 
 // Stop останавливает consumer
 func (c *Consumer) Stop() error {
+	if c.stopped {
+		return nil
+	}
 	c.logger.Info("Stopping Kafka consumer")
+	c.stopped = true
 	close(c.stopChan)
 	return c.reader.Close()
 }
