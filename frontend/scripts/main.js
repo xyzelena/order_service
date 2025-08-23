@@ -34,9 +34,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
     orderUIDInput.focus();
 
+    // Обработчики для кнопок действий
     const randomOrderBtn = document.getElementById('randomOrderBtn');
     if (randomOrderBtn) {
         randomOrderBtn.addEventListener('click', generateRandomOrder);
+    }
+
+    const cacheStatsBtn = document.getElementById('cacheStatsBtn');
+    if (cacheStatsBtn) {
+        cacheStatsBtn.addEventListener('click', getCacheStats);
+    }
+
+    const allOrdersBtn = document.getElementById('allOrdersBtn');
+    if (allOrdersBtn) {
+        allOrdersBtn.addEventListener('click', getAllOrders);
+    }
+
+    const healthCheckBtn = document.getElementById('healthCheckBtn');
+    if (healthCheckBtn) {
+        healthCheckBtn.addEventListener('click', healthCheck);
     }
 });
 
@@ -211,6 +227,12 @@ async function loadOrder(orderUID) {
 }
 
 // Генерация случайного заказа
+// Делаем функции доступными глобально для onclick атрибутов
+window.getCacheStats = getCacheStats;
+window.getAllOrders = getAllOrders;
+window.healthCheck = healthCheck;
+window.loadOrder = loadOrder;
+
 async function generateRandomOrder(event) {
     const randomBtn = event ? event.target : document.getElementById('randomOrderBtn');
 
