@@ -10,7 +10,7 @@ docker-compose up -d
 ```
 
 Это запустит:
-- **PostgreSQL** на порту 5432
+- **PostgreSQL** на порту 5433 (внешний)
 - **Kafka** на порту 9092
 - **Zookeeper** на порту 2181
 - **Kafka UI** на порту 8080
@@ -61,7 +61,10 @@ npx serve frontend -p 3000
 ```
 
 **Почему нужен сервер?**
-Frontend написан на чистом HTML/CSS/JavaScript, но браузеры блокируют CORS запросы к API при открытии файлов напрямую (file:// протокол). HTTP сервер решает эту проблему.
+Frontend использует ES6 модули и современную JavaScript архитектуру. Браузеры требуют HTTP сервер для:
+- Загрузки ES6 модулей (import/export)
+- Предотвращения CORS ошибок при API запросах
+- Корректной работы модульной архитектуры
 
 ## Тестирование компонентов
 
@@ -77,6 +80,8 @@ cd order_service/backend/app/tests
 - Корректность JSON ответов
 - Структура API responses `{"success": true/false, "data": ..., "error": ...}`
 - Обработка ошибок (404 для несуществующих заказов)
+- Создание случайных заказов через POST /api/v1/orders/random
+- Статистика кеша через GET /api/v1/cache/stats
 - Производительность API
 
 **Ожидаемый результат:**
@@ -135,17 +140,39 @@ go run kafka-producer.go
 - Kafka UI: http://localhost:8080
 - БД: новые записи в таблице orders
 
-### Тест 4: Frontend интерфейс
+### Тест 4: Модульная архитектура Frontend
+
+```bash
+# Автоматическая проверка модулей
+cd order_service
+make check-frontend
+```
+
+**Что проверяется:**
+- Наличие всех ES6 модулей
+- Корректность экспортов (export)
+- Корректность импортов (import)
+- Структура модульной архитектуры
+
+### Тест 5: Frontend интерфейс
 
 1. Откройте http://localhost:3000
 2. Введите `b563feb7b2b84b6test` в поле поиска
 3. Нажмите "Найти заказ"
 4. Проверьте отображение данных
+5. Протестируйте дополнительные функции:
+   - "Статистика кеша" - модальное окно с данными кеша
+   - "Список заказов" - интерактивный список для выбора
+   - "Создать случайный заказ" - генерация и отображение нового заказа
+   - "Проверка сервиса" - статус всех компонентов системы
 
 **Что проверяется:**
+- Загрузка ES6 модулей (api.js, modal.js, notifications.js, etc.)
+- Модульная архитектура JavaScript
 - Подключение к API на порту 8081
 - Отображение полной информации о заказе
-- Работа дополнительных функций (статистика, список заказов)
+- Работа модальных окон и уведомлений
+- Интерактивность и UX элементов
 
 ## Комплексный тест системы
 
@@ -169,9 +196,17 @@ make run
 # Терминал 3: Тестирование API
 curl http://localhost:8081/api/v1/orders/b563feb7b2b84b6test | jq
 
+# Тестирование новых функций
+curl -X POST http://localhost:8081/api/v1/orders/random | jq
+curl http://localhost:8081/api/v1/cache/stats | jq
+
 # Терминал 4: Тест производительности
 cd order_service/backend/app/tests
 go run cache_benchmark.go
+
+# Терминал 5: Проверка модульной архитектуры
+cd order_service
+make check-frontend
 ```
 
 ## Мониторинг и отладка
@@ -179,6 +214,13 @@ go run cache_benchmark.go
 ### Полезные команды:
 
 ```bash
+# Быстрая проверка всей системы
+cd order_service
+make quick-test
+
+# Проверка модульной структуры frontend
+make check-frontend
+
 # Логи всех контейнеров
 docker-compose logs -f
 
@@ -187,6 +229,12 @@ curl http://localhost:8081/api/v1/cache/stats | jq
 
 # Проверка здоровья
 curl http://localhost:8081/api/v1/health | jq
+
+# Создание тестового заказа
+curl -X POST http://localhost:8081/api/v1/orders/random | jq
+
+# Список заказов
+curl "http://localhost:8081/api/v1/orders?limit=5" | jq
 
 # Просмотр таблиц БД
 docker exec -it order_service_postgres psql -U user -d order_service_db -c "
@@ -212,12 +260,31 @@ docker exec -it order_service_kafka kafka-console-consumer --bootstrap-server lo
 
 ```bash
 # Проверить, что сервис запущен
-ps aux | grep server
+ps aux | grep order-service
 
-# Проверить порт
+# Проверить порт 8081
 lsof -i :8081
 
 # Проверить логи приложения
+cd order_service/backend/app
+make run
+
+# Быстрая проверка API
+curl http://localhost:8081/api/v1/health
+```
+
+### Проблема: Frontend модули не загружаются
+
+```bash
+# Проверить структуру модулей
+cd order_service
+make check-frontend
+
+# Проверить HTTP сервер
+lsof -i :3000
+
+# Проверить консоль браузера на ошибки CORS/модулей
+# Убедитесь, что используется HTTP сервер, а не file://
 ```
 
 ### Проблема: Kafka не работает
@@ -272,6 +339,26 @@ docker exec -it order_service_postgres psql -U user -d order_service_db -c "\dt"
 3. **Кеш ускоряет** повторные запросы минимум в 5 раз
 4. **Kafka обрабатывает** сообщения онлайн
 5. **БД сохраняет** данные транзакционно
-6. **Frontend отображает** данные корректно
+6. **Frontend ES6 модули** загружаются корректно
+7. **Модульная архитектура** работает без ошибок
+8. **CORS запросы** выполняются успешно
+9. **Генерация заказов** работает через POST API
+10. **Статистика кеша** доступна через API
+11. **Модальные окна** и **уведомления** функционируют
+12. **make check-frontend** проходит без ошибок
+
+### Команды для финальной проверки:
+
+```bash
+# Полная проверка системы
+cd order_service
+make test-full
+
+# Быстрая проверка основных функций  
+make quick-test
+
+# Проверка модульной архитектуры
+make check-frontend
+```
 
 Все тесты должны пройти успешно для подтверждения готовности системы.

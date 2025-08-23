@@ -1,6 +1,6 @@
 # Makefile для Order Service
 
-.PHONY: build run test clean docker-build docker-run deps help
+.PHONY: build run test clean docker-build docker-run deps help run-frontend lint fmt mod-verify dev-setup api-test random-order
 
 # Переменные
 APP_NAME=order-service
@@ -54,7 +54,7 @@ docker-build: ## Собрать Docker образ
 
 docker-run: docker-build ## Запустить в Docker контейнере
 	@echo "$(GREEN)Запуск в Docker...$(NC)"
-	docker run --rm -p 8080:8080 --env-file env.example $(DOCKER_IMAGE)
+	docker run --rm -p 8081:8081 --env-file env.example $(DOCKER_IMAGE)
 
 lint: ## Проверить код линтером
 	@echo "$(GREEN)Проверка кода...$(NC)"
@@ -81,6 +81,19 @@ dev-setup: ## Настройка среды разработки
 	else \
 		echo "$(YELLOW)Файл .env уже существует$(NC)"; \
 	fi
+
+api-test: ## Тестировать API эндпоинты
+	@echo "$(GREEN)Тестирование API...$(NC)"
+	@echo "$(YELLOW)Проверка health check...$(NC)"
+	@curl -s http://localhost:8081/api/v1/health | jq '.success' || echo "$(RED)API недоступен$(NC)"
+	@echo "$(YELLOW)Проверка поиска заказа...$(NC)"
+	@curl -s http://localhost:8081/api/v1/orders/b563feb7b2b84b6test | jq '.success' || echo "$(RED)Заказ не найден$(NC)"
+	@echo "$(YELLOW)Проверка статистики кеша...$(NC)"
+	@curl -s http://localhost:8081/api/v1/cache/stats | jq '.success' || echo "$(RED)Кеш недоступен$(NC)"
+
+random-order: ## Создать случайный заказ
+	@echo "$(GREEN)Создание случайного заказа...$(NC)"
+	@curl -s -X POST http://localhost:8081/api/v1/orders/random | jq '.data.order_uid' || echo "$(RED)Ошибка создания заказа$(NC)"
 
 # По умолчанию показываем справку
 .DEFAULT_GOAL := help

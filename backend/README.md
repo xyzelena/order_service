@@ -1,13 +1,15 @@
 # Backend - Order Service
 
-Backend микросервиса для обработки заказов на Go.
+Backend микросервиса для обработки заказов на Go с поддержкой PostgreSQL, Kafka и кеширования.
 
 ## Технологический стек
 
-- **Язык**: Go
-- **База данных**: PostgreSQL
-- **Очередь сообщений**: Kafka
-- **Кеширование**: In-memory cache
+- **Язык**: Go 1.21+
+- **База данных**: PostgreSQL 15+ (с миграциями)
+- **Очередь сообщений**: Kafka 7.4.0 (с Zookeeper)
+- **Кеширование**: LRU кеш в памяти (размер конфигурируется)
+- **API**: REST API с CORS поддержкой
+- **Архитектура**: Clean Architecture с внутренними модулями
 
 ## Настройка и запуск
 
@@ -19,26 +21,35 @@ Backend микросервиса для обработки заказов на G
 docker --version
 ```
 
-### 2. Запуск PostgreSQL
+### 2. Запуск инфраструктуры (PostgreSQL + Kafka)
 
 ```bash
 # Переход в папку database
 cd database
 
-# Запуск PostgreSQL контейнера
-docker-compose up -d postgres
+# Запуск всей инфраструктуры
+docker-compose up -d
 
 # Проверка статуса
 docker-compose ps
 ```
 
-### 3. Настройки подключения к БД
+### 3. Настройки подключения
 
+**PostgreSQL:**
 - **Host**: localhost
-- **Port**: 5432
+- **Port**: 5433 (внешний), 5432 (внутренний)
 - **Database**: order_service_db
 - **Username**: user
 - **Password**: 0000
+
+**Kafka:**
+- **Bootstrap Servers**: localhost:9092
+- **Topic**: orders
+- **Consumer Group**: order-service-group
+
+**Kafka UI:**
+- **URL**: http://localhost:8080
 
 ### 4. Дополнительные команды
 
@@ -51,6 +62,10 @@ docker exec -it order_service_postgres psql -U user -d order_service_db
 
 # Просмотр логов
 docker-compose logs postgres
+docker-compose logs kafka
+
+# Тестирование Kafka
+cd database && go run kafka-producer.go
 ```
 
 ## Структура файлов
@@ -108,9 +123,16 @@ make docker-run
 ```
 
 ### Доступные эндпоинты:
-- **HTTP API**: http://localhost:8080/api/v1/
-- **Веб-интерфейс**: http://localhost:8080/
-- **Health check**: http://localhost:8080/api/v1/health
+- **HTTP API**: http://localhost:8081/api/v1/
+- **Health check**: http://localhost:8081/api/v1/health
+- **Frontend server**: http://localhost:3000 (через make run-frontend)
+
+### Основные API эндпоинты:
+- `GET /api/v1/orders/{order_uid}` - получение заказа по ID
+- `GET /api/v1/orders?limit=N` - список заказов
+- `POST /api/v1/orders/random` - создание случайного заказа
+- `GET /api/v1/cache/stats` - статистика кеша
+- `GET /api/v1/health` - проверка здоровья сервиса
 
 Подробная документация в [app/README.md](app/README.md)
 
@@ -121,4 +143,6 @@ make docker-run
 - Таблицы создаются автоматически через миграции
 - Вставляется тестовый заказ для демонстрации работы
 - Go приложение автоматически восстанавливает кеш из БД при запуске
-- Убедитесь, что порт 5432 свободен перед запуском контейнера
+- Убедитесь, что порты 5433, 9092, 8080, 8081 свободны перед запуском
+- Frontend требует HTTP сервер для поддержки ES6 модулей
+- Kafka может потребовать время для инициализации после запуска
