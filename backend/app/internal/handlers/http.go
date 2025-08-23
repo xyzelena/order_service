@@ -66,6 +66,9 @@ func (h *HTTPHandler) SetupRoutes() *mux.Router {
 	api.HandleFunc("/orders/random", h.GenerateRandomOrder).Methods("POST", "OPTIONS")
 	api.HandleFunc("/cache/stats", h.GetCacheStats).Methods("GET")
 	api.HandleFunc("/health", h.HealthCheck).Methods("GET")
+	
+	// Обработчик для всех остальных API маршрутов (404)
+	api.PathPrefix("/").HandlerFunc(h.APINotFound)
 
 	// Простая главная страница с информацией об API
 	r.HandleFunc("/", h.APIInfoPage).Methods("GET")
@@ -162,6 +165,11 @@ func (h *HTTPHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 		"timestamp": "2024-01-01T00:00:00Z", // можно использовать time.Now()
 		"cache":     h.cache.GetStats(),
 	})
+}
+
+// APINotFound обрабатывает несуществующие API маршруты
+func (h *HTTPHandler) APINotFound(w http.ResponseWriter, r *http.Request) {
+	h.writeErrorResponse(w, http.StatusNotFound, "API endpoint not found")
 }
 
 // APIInfoPage отображает информацию об API

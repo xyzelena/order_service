@@ -24,9 +24,10 @@ check_response() {
     echo "URL: $url"
     
     # Выполняем запрос и сохраняем результат
-    response=$(curl -s -w "\n%{http_code}" "$url")
+    response=$(curl -s -w "\n%{http_code}" "$url" 2>/dev/null)
     http_code=$(echo "$response" | tail -n1)
-    json_body=$(echo "$response" | head -n -1)
+    # Извлекаем только JSON API ответ (содержит поле success, а не level)
+    json_body=$(echo "$response" | sed '$d' | grep '^{' | grep -v '"level"' | tail -n1)
     
     echo "HTTP Status: $http_code"
     
@@ -41,8 +42,7 @@ check_response() {
         echo -e "${GREEN}✅ Ответ является валидным JSON${NC}"
         
         # Проверяем структуру ответа
-        success=$(echo "$json_body" | jq -r '.success // "null"')
-        if [ "$success" = "true" ] || [ "$success" = "false" ]; then
+        if echo "$json_body" | jq 'has("success")' | grep -q "true"; then
             echo -e "${GREEN}✅ Структура ответа корректная (поле success присутствует)${NC}"
         else
             echo -e "${RED}❌ Некорректная структура ответа (отсутствует поле success)${NC}"
