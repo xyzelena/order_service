@@ -77,7 +77,6 @@ func (c *Consumer) Start(ctx context.Context) error {
 					   !strings.Contains(err.Error(), "timeout") {
 						c.logger.WithError(err).Error("Failed to process Kafka message")
 					}
-					// Пауза уже добавлена в processMessage
 				}
 			}
 		}
@@ -106,12 +105,9 @@ func (c *Consumer) processMessage(ctx context.Context) error {
 	msg, err := c.reader.ReadMessage(readCtx)
 	if err != nil {
 		if err == context.DeadlineExceeded {
-			// Таймаут - это нормально, просто нет сообщений
-			// Добавляем паузу чтобы не спамить
 			time.Sleep(2 * time.Second)
 			return nil
 		}
-		// Для других ошибок тоже добавляем паузу
 		time.Sleep(1 * time.Second)
 		return fmt.Errorf("failed to read message: %w", err)
 	}

@@ -4,7 +4,6 @@ import (
 	"time"
 )
 
-// Order представляет основную информацию о заказе
 type Order struct {
 	OrderUID          string    `json:"order_uid" db:"order_uid"`
 	TrackNumber       string    `json:"track_number" db:"track_number"`
@@ -21,7 +20,6 @@ type Order struct {
 	UpdatedAt         time.Time `json:"updated_at" db:"updated_at"`
 }
 
-// Delivery представляет информацию о доставке
 type Delivery struct {
 	ID       int    `json:"id" db:"id"`
 	OrderUID string `json:"order_uid" db:"order_uid"`
@@ -35,7 +33,6 @@ type Delivery struct {
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 }
 
-// Payment представляет платежную информацию
 type Payment struct {
 	ID           int       `json:"id" db:"id"`
 	OrderUID     string    `json:"order_uid" db:"order_uid"`
@@ -52,7 +49,6 @@ type Payment struct {
 	CreatedAt    time.Time `json:"created_at" db:"created_at"`
 }
 
-// OrderItem представляет товар в заказе
 type OrderItem struct {
 	ID          int       `json:"id" db:"id"`
 	OrderUID    string    `json:"order_uid" db:"order_uid"`

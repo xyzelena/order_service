@@ -34,7 +34,6 @@ func main() {
 
 	logger.Info("Starting Order Service")
 
-	// Загружаем конфигурацию
 	cfg := config.LoadConfig()
 	logger.WithFields(logrus.Fields{
 		"server_port": cfg.Server.Port,
@@ -43,7 +42,6 @@ func main() {
 		"cache_size":  cfg.Cache.MaxSize,
 	}).Info("Configuration loaded")
 
-	// Подключаемся к базе данных
 	db, err := database.NewPostgresDB(&cfg.Database, logger)
 	if err != nil {
 		logger.WithError(err).Fatal("Failed to connect to database")

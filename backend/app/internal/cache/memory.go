@@ -113,7 +113,6 @@ func (c *MemoryCache) GetStats() CacheStats {
 	return CacheStats{
 		Size:     len(c.cache),
 		Capacity: c.capacity,
-		// Hits и Misses можно добавить позже с дополнительными счетчиками
 	}
 }
 
